@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Food Ingredient Checker - PureView</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-yellow-100 via-red-100 to-orange-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="glass px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <img src="pureview11.png" alt="PureView Logo" class="h-16 w-auto" />
+      <h1 class="text-2xl font-bold text-orange-700">PureView</h1>
+    </div>
+    <nav class="space-x-6 text-gray-800 font-medium">
+      <a href="index.html" class="hover:text-orange-600">Home</a>
+      <a href="contact.html" class="hover:text-orange-600">Contact</a>
+      <a href="history.html" class="hover:text-orange-600">History</a>
+    </nav>
+  </header>
+
+  <!-- Title -->
+  <div class="text-center mt-8 mb-10">
+    <h1 class="text-4xl font-bold text-orange-700 mb-2">🍽️ Food Ingredient Checker</h1>
+    <p class="text-lg text-gray-700">Upload your food label and ask questions about the ingredients or allergens.</p>
+  </div>
+
+  <!-- Main Section -->
+  <main class="flex-grow px-6 py-10 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      <!-- Left Column -->
+      <div class="space-y-6">
+
+        <!-- Upload Box -->
+        <div class="glass p-6 rounded-xl shadow-md h-[370px] flex flex-col justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-orange-800 mb-4">📷 Upload Food Label</h2>
+            <div id="preview-container" class="border-2 border-dashed border-gray-400 rounded-lg h-48 w-full flex justify-center items-center overflow-hidden mb-4">
+              <span id="placeholder" class="text-sm text-gray-600">Upload an image to scan...</span>
+              <img id="preview" src="#" alt="Preview" class="hidden object-contain h-full" />
+            </div>
+          </div>
+          <button onclick="document.getElementById('fileInput').click()" class="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 w-full">Upload & Scan</button>
+          <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="previewImage(event)" />
+        </div>
+
+        <!-- Ask AI -->
+        <div class="glass p-6 rounded-xl shadow-md h-[220px] flex flex-col justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-orange-800 mb-4">🤖 Ask About Your Ingredients</h2>
+            <textarea id="questionInput" rows="2" class="w-full p-3 rounded-lg border border-gray-300 shadow-sm resize-none" placeholder="e.g., Does this product contain allergens?"></textarea>
+          </div>
+          <button onclick="askAI()" class="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 w-full mt-3">Ask AI</button>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="glass p-6 rounded-xl shadow-md h-[620px] flex flex-col">
+        <h2 class="text-lg font-semibold text-orange-800 mb-4">🧠 Scan Result</h2>
+        <div id="scanResult" class="bg-white p-4 rounded-lg flex-grow overflow-auto text-gray-700 text-sm shadow-inner">
+          🧾 Results will appear here after upload.
+        </div>
+        <div id="aiAnswer" class="mt-4 bg-white p-3 rounded-lg text-gray-800 text-sm shadow-inner min-h-[60px] font-medium">
+          💬 <strong>Answer:</strong> AI response will appear here...
+        </div>
+        <div id="relatedProduct" class="mt-2 bg-white p-3 rounded-lg text-gray-800 text-sm shadow-inner min-h-[50px] font-medium">
+          🛒 <strong>Related Product:</strong> AI suggestion will appear here...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass text-center text-gray-800 py-4 mt-10">
+    © 2025 PureView | Created by Team InoVision 🚀
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const scanResult = document.getElementById('scanResult');
+    const preview = document.getElementById('preview');
+    const placeholder = document.getElementById('placeholder');
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.classList.remove("hidden");
+        placeholder.classList.add("hidden");
+        performOCR(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function performOCR(imageData) {
+      scanResult.innerText = "🔍 Scanning...";
+      Tesseract.recognize(imageData, 'eng', {
+        logger: m => console.log(m)
+      }).then(({ data: { text } }) => {
+        const cleaned = text.replace(/[^a-zA-Z0-9:,\.\s\/\-\(\)]/g, '').trim();
+        scanResult.innerHTML = `<strong>🧠 Extracted Text:</strong><br>${cleaned}`;
+        saveToBackend(cleaned);
+      }).catch(err => {
+        scanResult.innerText = "❌ Scan failed.";
+        console.error(err);
+      });
+    }
+
+    function saveToBackend(text) {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("⚠️ Please log in first.");
+        return;
+      }
+
+      const status = text.toLowerCase().includes("sugar") || text.toLowerCase().includes("palm oil") ? "Caution" : "Safe";
+
+      fetch("http://localhost:5000/api/scan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          type: "Food",
+          result: text,
+          status
+        })
+      }).then(res => res.text())
+        .then(msg => console.log("✅ Saved:", msg))
+        .catch(err => console.error("❌ Failed to save scan", err));
+    }
+
+    async function askAI() {
+      const question = document.getElementById("questionInput").value.trim();
+      const aiAnswer = document.getElementById("aiAnswer");
+      const relatedProduct = document.getElementById("relatedProduct");
+
+      if (!question) {
+        alert("❗ Enter a question first.");
+        return;
+      }
+
+      aiAnswer.innerHTML = "⏳ Thinking...";
+      relatedProduct.innerHTML = "";
+
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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", // Replace with your key
+            "HTTP-Referer": "http://localhost",
+            "X-Title": "PureView"
+          },
+          body: JSON.stringify({
+            model: "mistralai/mixtral-8x7b-instruct",
+            messages: [
+              {
+                role: "system",
+                content: "You are a food ingredient expert. Always reply with this format:\nAnswer: <your detailed answer here>\nRelated Product: <suggest a healthy/alternative food product based on query>"
+              },
+              { role: "user", content: question }
+            ]
+          })
+        });
+
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content || "";
+
+        const answerMatch = content.match(/Answer:\s*(.+?)(?:\n|$)/i);
+        const productMatch = content.match(/Related Product:\s*(.+)/i);
+
+        aiAnswer.innerHTML = `💬 <strong>Answer:</strong><br>${answerMatch ? answerMatch[1] : "❓ No clear answer."}`;
+        relatedProduct.innerHTML = `🛒 <strong>Related Product:</strong><br>${productMatch ? productMatch[1] : "❓ None suggested."}`;
+      } catch (err) {
+        aiAnswer.innerHTML = "❌ Failed to contact AI.";
+        relatedProduct.innerHTML = "";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>

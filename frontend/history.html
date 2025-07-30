@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>History - PureView</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="glass px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <img src="pureview11.png" alt="PureView Logo" class="h-16 w-auto" />
+      <h1 class="text-2xl font-bold text-blue-800">PureView</h1>
+    </div>
+    <nav class="space-x-6 text-gray-800 font-medium">
+      <a href="dashboard.html" class="hover:text-blue-600">Home</a>
+      <a href="contact.html" class="hover:text-blue-600">Contact</a>
+      <a href="history.html" class="hover:text-blue-600 font-semibold text-blue-600">History</a>
+    </nav>
+  </header>
+
+  <!-- Title -->
+  <div class="text-center mt-10 mb-6">
+    <h2 class="text-3xl font-bold text-purple-800">📜 Scan History</h2>
+    <p class="text-gray-700 text-sm">Your scanned results will appear below</p>
+  </div>
+
+  <!-- History Table -->
+  <div class="max-w-6xl mx-auto glass p-6 rounded-xl shadow-lg overflow-auto">
+    <table class="w-full table-auto text-sm text-left text-gray-700">
+      <thead class="text-md text-gray-800 uppercase bg-white/50 rounded">
+        <tr>
+          <th class="px-4 py-3">#</th>
+          <th class="px-4 py-3">Scan Type</th>
+          <th class="px-4 py-3">Scanned Text</th>
+          <th class="px-4 py-3">Date</th>
+          <th class="px-4 py-3">Status</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white/40 divide-y divide-gray-200 rounded-xl">
+        <!-- Example Row -->
+        <tr class="hover:bg-white/60 transition">
+          <td class="px-4 py-3">1</td>
+          <td class="px-4 py-3">Ingredient</td>
+          <td class="px-4 py-3">Contains Paraben & Alcohol</td>
+          <td class="px-4 py-3">27 July 2025</td>
+          <td class="px-4 py-3 text-green-700 font-semibold">Safe</td>
+        </tr>
+        <tr class="hover:bg-white/60 transition">
+          <td class="px-4 py-3">2</td>
+          <td class="px-4 py-3">Food</td>
+          <td class="px-4 py-3">Contains MSG</td>
+          <td class="px-4 py-3">26 July 2025</td>
+          <td class="px-4 py-3 text-red-600 font-semibold">Caution</td>
+        </tr>
+        <!-- Additional rows will be fetched dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <footer class="glass text-center text-gray-800 py-4 mt-10">
+    © 2025 PureView | Created by Team InoVision 🚀
+  </footer>
+  <script>
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("❌ Login required");
+    window.location.href = "login.html";
+  }
+
+  fetch("http://localhost:5000/api/scan", {
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  }).then(res => res.json())
+    .then(scans => {
+      const tbody = document.querySelector("tbody");
+      tbody.innerHTML = ""; // Clear placeholder rows
+
+      scans.forEach((scan, index) => {
+        const row = document.createElement("tr");
+        row.className = "hover:bg-white/60 transition";
+
+        row.innerHTML = `
+          <td class="px-4 py-3">${index + 1}</td>
+          <td class="px-4 py-3">${scan.type}</td>
+          <td class="px-4 py-3">${scan.result}</td>
+          <td class="px-4 py-3">${new Date(scan.date).toLocaleDateString()}</td>
+          <td class="px-4 py-3 text-${scan.status === 'Safe' ? 'green' : 'red'}-600 font-semibold">${scan.status}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => {
+      console.error("❌ Failed to load history:", err);
+    });
+</script>
+
+</body>
+</html>

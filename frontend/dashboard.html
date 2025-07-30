@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PureView Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    @keyframes slide {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .animate-slide {
+      animation: slide 30s linear infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="glass px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <img src="pureview11.png" alt="PureView Logo" class="h-16 w-auto" />
+      <h1 class="text-2xl font-bold text-blue-800">PureView</h1>
+    </div>
+    <nav class="space-x-6 text-gray-800 font-medium">
+      <a href="#" class="hover:text-blue-600">Home</a>
+      <a href="contact.html" class="hover:text-blue-600">Contact</a>
+      <a href="history.html" class="hover:text-blue-600">History</a>
+    </nav>
+  </header>
+
+  <!-- Main Section -->
+  <main class="flex-grow px-6 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-7xl mx-auto">
+
+      <!-- Left: Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="ingredient.html" class="glass rounded-xl p-6 h-40 w-full shadow-md hover:shadow-xl transition-all duration-300">
+          <div class="text-3xl">🧴</div>
+          <h3 class="text-lg font-bold text-blue-700 mt-2">Ingredient Checker</h3>
+          <p class="text-sm text-gray-800">Detect harmful chemicals in cosmetics.</p>
+        </a>
+        <a href="supplement.html" class="glass rounded-xl p-6 h-40 w-full shadow-md hover:shadow-xl transition-all duration-300">
+          <div class="text-3xl">💊</div>
+          <h3 class="text-lg font-bold text-green-700 mt-2">Supplement Checker</h3>
+          <p class="text-sm text-gray-800">Check supplement safety & expiry.</p>
+        </a>
+        <a href="company.html" class="glass rounded-xl p-6 h-40 w-full shadow-md hover:shadow-xl transition-all duration-300">
+          <div class="text-3xl">🏷️</div>
+          <h3 class="text-lg font-bold text-purple-700 mt-2">Company Label Checker</h3>
+          <p class="text-sm text-gray-800">Scan QR/barcode for authenticity.</p>
+        </a>
+        <a href="food.html" class="glass rounded-xl p-6 h-40 w-full shadow-md hover:shadow-xl transition-all duration-300">
+          <div class="text-3xl">🥗</div>
+          <h3 class="text-lg font-bold text-pink-600 mt-2">Food Ingredient Checker</h3>
+          <p class="text-sm text-gray-800">Avoid allergens or banned items.</p>
+        </a>
+      </div>
+
+      <!-- Right: Camera Scanner -->
+      <div class="glass rounded-xl p-8 w-full shadow-xl flex flex-col items-center space-y-4">
+        <h2 class="text-xl font-semibold text-gray-800">📷 Scan Product</h2>
+        <video id="video" autoplay class="rounded-lg w-full h-64 border border-gray-400"></video>
+        <button onclick="captureAndScan()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Capture & Scan</button>
+        <canvas id="canvas" class="hidden"></canvas>
+        <div id="ocrResult" class="mt-4 text-sm text-gray-700 text-left w-full overflow-auto max-h-32 p-2 bg-white rounded-lg"></div>
+      </div>
+    </div>
+
+    <!-- 🔄 Sliding Ads (Proper Placement Below Grid) -->
+    <div class="mt-14 relative overflow-hidden w-full rounded-xl p-6 glass shadow-md">
+      <div class="flex space-x-8 animate-slide">
+        <div class="min-w-[360px] h-40 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl p-4 shadow-md flex flex-col justify-center">
+          <h3 class="text-lg font-semibold text-blue-800 mb-1">✅ Scan & Be Safe</h3>
+          <p class="text-sm text-gray-800">Use AI to detect harmful ingredients and ensure safe usage.</p>
+        </div>
+        <div class="min-w-[360px] h-40 bg-gradient-to-r from-green-100 to-green-200 rounded-2xl p-4 shadow-md flex flex-col justify-center">
+          <h3 class="text-lg font-semibold text-green-800 mb-1">🌿 Trusted Skincare Brands</h3>
+          <p class="text-sm text-gray-800">We recommend CeraVe, Cetaphil, and Neutrogena.</p>
+        </div>
+        <div class="min-w-[360px] h-40 bg-gradient-to-r from-pink-100 to-pink-200 rounded-2xl p-4 shadow-md flex flex-col justify-center">
+          <h3 class="text-lg font-semibold text-pink-800 mb-1">🚫 Banned Chemicals</h3>
+          <p class="text-sm text-gray-800">Avoid mercury, parabens, hydroquinone in products.</p>
+        </div>
+        <div class="min-w-[360px] h-40 bg-gradient-to-r from-red-100 to-red-200 rounded-2xl p-4 shadow-md flex flex-col justify-center">
+          <h3 class="text-lg font-semibold text-red-800 mb-1">🔍 Fake Product Alerts</h3>
+          <p class="text-sm text-gray-800">Scan QR/barcodes to verify authenticity.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass text-center text-gray-800 py-4 mt-10">
+    © 2025 PureView | Created by Team InoVision 🚀
+  </footer>
+
+  <!-- OCR JS -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ocrResult = document.getElementById('ocrResult');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        console.error("Camera access denied:", err);
+      });
+
+    function captureAndScan() {
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      ocrResult.innerText = "🔍 Scanning...";
+
+      Tesseract.recognize(
+        imageData,
+        'eng',
+        { logger: m => console.log(m) }
+      ).then(({ data: { text } }) => {
+        ocrResult.innerHTML = `<strong>🧠 Extracted Text:</strong><br>${text}`;
+      }).catch(err => {
+        ocrResult.innerText = "❌ OCR failed. Try again.";
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert("❌ Please login first!");
+    window.location.href = "login.html";
+  }
+</script>
