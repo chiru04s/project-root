@@ -17,10 +17,11 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));      // Auth Routes
-app.use('/api/scan', require('./routes/scan'));      // Scan Routes
-app.use('/api/ai', require('./routes/ai'));          // AI Route
-app.use('/api/contact', require('./routes/Contact'));// Contact Form Route
+app.use('/api/auth', require('./routes/auth'));            // Auth Routes
+const scanRoutes = require('./routes/scanRoutes');         // Import Scan Routes
+app.use('/api/scan', scanRoutes);                          // ✅ Mount Scan Route
+app.use('/api/ai', require('./routes/ai'));                // AI Route
+app.use('/api/contact', require('./routes/Contact'));      // Contact Form Route
 
 // Start server
 const PORT = process.env.PORT || 5000;

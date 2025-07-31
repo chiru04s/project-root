@@ -1,25 +1,31 @@
 const Scan = require('../models/Scan');
 
-exports.saveScan = async (req, res) => {
+const saveScan = async (req, res) => {
   try {
-    const newScan = new Scan({
-      userId: req.user.id,
-      type: req.body.type,
-      result: req.body.result,
-      status: req.body.status
-    });
+    const { barcode, name } = req.body;
+    const userId = req.user.id;
+
+    const newScan = new Scan({ user: userId, barcode, name });
     await newScan.save();
-    res.send('Scan saved');
-  } catch (err) {
-    res.status(500).send('Scan save error');
+
+    res.status(201).json({ message: 'Scan saved successfully' });
+  } catch (error) {
+    console.error("❌ Error saving scan:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.getScans = async (req, res) => {
+// Get all scans for the user (no date filter)
+const getScans = async (req, res) => {
   try {
-    const scans = await Scan.find({ userId: req.user.id });
-    res.json(scans);
-  } catch (err) {
-    res.status(500).send('Scan fetch error');
+    const userId = req.user.id;
+
+    const scans = await Scan.find({ user: userId }).sort({ date: -1 });
+    res.status(200).json(scans);
+  } catch (error) {
+    console.error("❌ Error fetching scans:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
+module.exports = { saveScan, getScans };

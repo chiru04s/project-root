@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Food Ingredient Checker - PureView</title>
+  <title>Packed Food Checker - PureView</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .glass {
@@ -19,11 +20,11 @@
   <!-- Header -->
   <header class="glass px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
     <div class="flex items-center space-x-3">
-      <img src="pureview11.png" alt="PureView Logo" class="h-16 w-auto" />
+      <img src="pureview11.png" alt="PureView Logo" class="h-10 w-auto" />
       <h1 class="text-2xl font-bold text-orange-700">PureView</h1>
     </div>
     <nav class="space-x-6 text-gray-800 font-medium">
-      <a href="index.html" class="hover:text-orange-600">Home</a>
+      <a href="dashboard.html" class="hover:text-orange-600">Home</a>
       <a href="contact.html" class="hover:text-orange-600">Contact</a>
       <a href="history.html" class="hover:text-orange-600">History</a>
     </nav>
@@ -31,8 +32,8 @@
 
   <!-- Title -->
   <div class="text-center mt-8 mb-10">
-    <h1 class="text-4xl font-bold text-orange-700 mb-2">🍽️ Food Ingredient Checker</h1>
-    <p class="text-lg text-gray-700">Upload your food label and ask questions about the ingredients or allergens.</p>
+    <h1 class="text-4xl font-bold text-orange-700 mb-2">🍽️Packed Food Checker</h1>
+    <p class="text-lg text-gray-700">Scan your food barcode and ask questions about the ingredients or allergens.</p>
   </div>
 
   <!-- Main Section -->
@@ -42,34 +43,34 @@
       <!-- Left Column -->
       <div class="space-y-6">
 
-        <!-- Upload Box -->
-        <div class="glass p-6 rounded-xl shadow-md h-[370px] flex flex-col justify-between">
-          <div>
-            <h2 class="text-lg font-semibold text-orange-800 mb-4">📷 Upload Food Label</h2>
-            <div id="preview-container" class="border-2 border-dashed border-gray-400 rounded-lg h-48 w-full flex justify-center items-center overflow-hidden mb-4">
-              <span id="placeholder" class="text-sm text-gray-600">Upload an image to scan...</span>
-              <img id="preview" src="#" alt="Preview" class="hidden object-contain h-full" />
-            </div>
-          </div>
-          <button onclick="document.getElementById('fileInput').click()" class="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 w-full">Upload & Scan</button>
-          <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="previewImage(event)" />
-        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">📷 Live QR / Barcode Scanner</h2>
+      <div id="reader" style="width: 100%;"></div>
+      <div class="mt-4 text-sm text-gray-600">Scanned Barcode: <span id="barcodeText" class="font-semibold"></span></div>
+      <div class="mt-4">
+        <h3 class="text-lg font-bold">🧾 Product Info:</h3>
+        <pre id="productInfo" class="bg-gray-100 p-3 rounded-lg text-sm overflow-auto max-h-64">Scan a product...</pre>
+      </div>
+    </div>
 
+    <!-- Ingredient Analysis -->
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">🧪 Ingredient Health Insights</h2>
+      <p class="text-gray-700 text-sm mb-2">We'll tell you if ingredients are harmful or useful.</p>
+      <div id="ingredientInsights" class="bg-gray-100 p-4 rounded-lg text-sm max-h-64 overflow-auto">Awaiting scan...</div>
+    </div>
         <!-- Ask AI -->
+        
+      </div>
+
+      <!-- Right Column -->
+      <div class="glass p-6 rounded-xl shadow-md h-[620px] flex flex-col">
         <div class="glass p-6 rounded-xl shadow-md h-[220px] flex flex-col justify-between">
           <div>
             <h2 class="text-lg font-semibold text-orange-800 mb-4">🤖 Ask About Your Ingredients</h2>
             <textarea id="questionInput" rows="2" class="w-full p-3 rounded-lg border border-gray-300 shadow-sm resize-none" placeholder="e.g., Does this product contain allergens?"></textarea>
           </div>
           <button onclick="askAI()" class="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700 w-full mt-3">Ask AI</button>
-        </div>
-      </div>
-
-      <!-- Right Column -->
-      <div class="glass p-6 rounded-xl shadow-md h-[620px] flex flex-col">
-        <h2 class="text-lg font-semibold text-orange-800 mb-4">🧠 Scan Result</h2>
-        <div id="scanResult" class="bg-white p-4 rounded-lg flex-grow overflow-auto text-gray-700 text-sm shadow-inner">
-          🧾 Results will appear here after upload.
         </div>
         <div id="aiAnswer" class="mt-4 bg-white p-3 rounded-lg text-gray-800 text-sm shadow-inner min-h-[60px] font-medium">
           💬 <strong>Answer:</strong> AI response will appear here...
@@ -89,62 +90,190 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const scanResult = document.getElementById('scanResult');
-    const preview = document.getElementById('preview');
-    const placeholder = document.getElementById('placeholder');
+const goodIngredients = [
+  // Packed food
+  'fiber',
+  'protein',
+  'vitamin',
+  'whole grain',
+  'probiotics',
+  'iron',
+  'calcium',
+  'magnesium',
+  'zinc',
+  'omega-3',
+  'green tea extract',
+  'turmeric',
+  'ginger',
+  'olive oil',
+  'avocado oil',
+  'niacinamide',
+  'stevia',
+  'monk fruit',
+  'chia seeds',
+  'flax seeds',
+  'brown rice',
+  'oats',
+  'quinoa',
+  'natural flavor',
+  'spinach powder',
+  'beetroot powder',
+  'coconut sugar',
+  'honey',
 
-    function previewImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        preview.src = e.target.result;
-        preview.classList.remove("hidden");
-        placeholder.classList.add("hidden");
-        performOCR(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  // Gym supplements
+  'whey protein',
+  'casein',
+  'creatine monohydrate',
+  'beta-alanine',
+  'l-citrulline',
+  'l-arginine',
+  'branched-chain amino acids',
+  'bcaa',
+  'eaa',
+  'electrolytes',
+  'vitamin d',
+  'vitamin b12',
+  'glutamine',
+  'ashwagandha',
+  'rhodiola rosea',
+  'digestive enzymes',
+  'mct oil',
+  'caffeine (moderate)',
 
-    function performOCR(imageData) {
-      scanResult.innerText = "🔍 Scanning...";
-      Tesseract.recognize(imageData, 'eng', {
-        logger: m => console.log(m)
-      }).then(({ data: { text } }) => {
-        const cleaned = text.replace(/[^a-zA-Z0-9:,\.\s\/\-\(\)]/g, '').trim();
-        scanResult.innerHTML = `<strong>🧠 Extracted Text:</strong><br>${cleaned}`;
-        saveToBackend(cleaned);
-      }).catch(err => {
-        scanResult.innerText = "❌ Scan failed.";
-        console.error(err);
+  // Cosmetics (safe ingredients used in skin/hair care)
+  'hyaluronic acid',
+  'aloe vera',
+  'shea butter',
+  'coconut oil',
+  'jojoba oil',
+  'glycerin',
+  'ceramides',
+  'niacinamide',
+  'vitamin e',
+  'panthenol',
+  'green tea',
+  'licorice root extract'
+];
+const badIngredients = [
+  // Packed food
+  'high-fructose corn syrup',
+  'palm oil',
+  'aspartame',
+  'msg',
+  'sodium nitrate',
+  'sodium nitrite',
+  'trans fat',
+  'hydrogenated oil',
+  'artificial flavor',
+  'artificial color',
+  'red 40',
+  'yellow 5',
+  'blue 1',
+  'saccharin',
+  'sucralose',
+  'bht',
+  'bha',
+  'propyl gallate',
+  'tbhq',
+  'maltodextrin',
+  'monosodium glutamate',
+  'sodium benzoate',
+  'sulfite',
+  'glucose syrup',
+  'refined flour',
+  'refined sugar',
+  'dextrose',
+  'caramel color',
+  'potassium sorbate',
+  'corn syrup solids',
+
+  // Gym supplements
+  'proprietary blend',
+  'acesulfame potassium',
+  'banned stimulants',
+  '1,3-dmaa',
+  'synephrine',
+  'yohimbine (high dose)',
+  'phenylbutazone',
+  'lead',
+  'mercury',
+  'excess caffeine',
+  'silicon dioxide',
+  'titanium dioxide',
+  'magnesium stearate',
+  'polysorbate 80',
+  'propylene glycol',
+
+  // Cosmetics
+  'paraben',
+  'sodium lauryl sulfate',
+  'sls',
+  'sles',
+  'formaldehyde',
+  'phthalates',
+  'triclosan',
+  'oxybenzone',
+  'coal tar dyes',
+  'mineral oil',
+  'petrolatum',
+  'synthetic fragrance',
+  'aluminum chlorohydrate'
+];
+
+
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 250 };
+
+    function analyzeIngredients(text) {
+      const result = [];
+      const lower = text.toLowerCase();
+
+      badIngredients.forEach(i => {
+        if (lower.includes(i)) result.push(`❌ Harmful: ${i}`);
       });
+
+      goodIngredients.forEach(i => {
+        if (lower.includes(i)) result.push(`✅ Useful: ${i}`);
+      });
+
+      return result.length ? result.join("\n") : "⚠️ No strong match found.";
     }
 
-    function saveToBackend(text) {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert("⚠️ Please log in first.");
-        return;
-      }
-
-      const status = text.toLowerCase().includes("sugar") || text.toLowerCase().includes("palm oil") ? "Caution" : "Safe";
-
-      fetch("http://localhost:5000/api/scan", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({
-          type: "Food",
-          result: text,
-          status
+    function fetchProduct(barcode) {
+      document.getElementById("barcodeText").innerText = barcode;
+      fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 1) {
+            const product = data.product;
+            const info = `📦 Name: ${product.product_name || 'N/A'}\n🧾 Ingredients: ${product.ingredients_text || 'N/A'}\n🍽️ Brand: ${product.brands || 'N/A'}\n🥗 Nutrition Grade: ${product.nutrition_grades || 'N/A'}`;
+            document.getElementById("productInfo").innerText = info;
+            document.getElementById("ingredientInsights").innerText = analyzeIngredients(product.ingredients_text || '');
+          } else {
+            document.getElementById("productInfo").innerText = "❌ Product not found!";
+            document.getElementById("ingredientInsights").innerText = "No data to analyze.";
+          }
         })
-      }).then(res => res.text())
-        .then(msg => console.log("✅ Saved:", msg))
-        .catch(err => console.error("❌ Failed to save scan", err));
+        .catch(err => {
+          document.getElementById("productInfo").innerText = "⚠️ Error fetching data.";
+          document.getElementById("ingredientInsights").innerText = "";
+        });
     }
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          barcode => {
+            html5QrCode.stop().then(() => {
+              fetchProduct(barcode);
+            });
+          }
+        ).catch(err => console.error("Camera start error:", err));
+      }
+    }).catch(err => console.error("Camera fetch error:", err));
 
     async function askAI() {
       const question = document.getElementById("questionInput").value.trim();

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Supplement Checker | PureView</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     .glass {
       background: rgba(255, 255, 255, 0.2);
@@ -20,7 +21,7 @@
   <!-- Header -->
   <header class="bg-white/30 backdrop-blur-md border border-white/40 shadow-lg rounded-b-xl px-8 py-4 flex justify-between items-center w-full fixed top-0 left-0 z-50">
     <div class="flex items-center space-x-3">
-      <img src="pureview11.png" alt="PureView Logo" class="h-16 w-auto" />
+      <img src="pureview11.png" alt="PureView Logo" class="h-10 w-auto" />
       <h1 class="text-2xl font-bold text-orange-700">PureView</h1>
     </div>
     <nav class="space-x-8 text-gray-800 font-medium">
@@ -33,7 +34,7 @@
   <!-- Page Title -->
   <div class="text-center mb-10">
     <h1 class="text-4xl font-bold text-orange-700 mb-2">💊 Supplement Checker</h1>
-    <p class="text-lg text-gray-700">Upload or scan supplement packaging and ask AI about contents or safety.</p>
+    <p class="text-lg text-gray-700">Scan supplement packaging and ask AI about contents or safety.</p>
   </div>
 
   <!-- Main Layout -->
@@ -41,26 +42,32 @@
 
     <!-- Left: Upload + Camera -->
     <div class="glass p-8 shadow-lg space-y-6">
-      <h2 class="text-xl font-semibold text-gray-800">📤 Upload or Use Camera</h2>
+      <!-- <h2 class="text-xl font-semibold text-gray-800">📤 Upload or Use Camera</h2>
 
-      <!-- Upload -->
+      
       <div>
         <label class="block text-sm text-gray-700 mb-2">Choose an image of your supplement label:</label>
         <input type="file" accept="image/*" class="w-full p-2 rounded bg-white/60 border border-gray-300" />
-      </div>
+      </div> -->
 
       <!-- Camera -->
-      <div>
-        <video id="video" autoplay class="rounded-lg w-full h-64 bg-gray-200 border border-gray-400 mb-2"></video>
-        <button onclick="captureAndScan()" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">📸 Capture & Scan</button>
-        <canvas id="canvas" class="hidden"></canvas>
-      </div>
-
-      <!-- OCR Result -->
-      <div id="ocrResult" class="p-4 bg-white/70 text-sm text-gray-800 rounded overflow-auto h-32">
-        📝 Extracted text will appear here...
+      <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">📷 Live QR / Barcode Scanner</h2>
+      <div id="reader" style="width: 100%;"></div>
+      <div class="mt-4 text-sm text-gray-600">Scanned Barcode: <span id="barcodeText" class="font-semibold"></span></div>
+      <div class="mt-4">
+        <h3 class="text-lg font-bold">🧾 Product Info:</h3>
+        <pre id="productInfo" class="bg-gray-100 p-3 rounded-lg text-sm overflow-auto max-h-64">Scan a product...</pre>
       </div>
     </div>
+
+    <!-- Ingredient Analysis -->
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">🧪 Ingredient Health Insights</h2>
+      <p class="text-gray-700 text-sm mb-2">We'll tell you if ingredients are harmful or useful.</p>
+      <div id="ingredientInsights" class="bg-gray-100 p-4 rounded-lg text-sm max-h-64 overflow-auto">Awaiting scan...</div>
+    </div>
+     </div>
 
     <!-- Right: Ask AI -->
     <div class="glass p-8 shadow-lg space-y-6">
@@ -86,36 +93,7 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <script>
-    // Camera + OCR
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ocrResult = document.getElementById('ocrResult');
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        video.srcObject = stream;
-      }).catch((err) => {
-        console.error("Camera access denied:", err);
-      });
-
-    function captureAndScan() {
-      const ctx = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = canvas.toDataURL('image/png');
-
-      ocrResult.innerText = "🔍 Scanning...";
-
-      Tesseract.recognize(imageData, 'eng', {
-        logger: m => console.log(m)
-      }).then(({ data: { text } }) => {
-        ocrResult.innerHTML = `<strong>🧠 Extracted Text:</strong><br>${text}`;
-      }).catch(err => {
-        ocrResult.innerText = "❌ OCR failed. Try again.";
-        console.error(err);
-      });
-    }
+    
 
     // Ask AI (OpenRouter)
     const askBtn = document.getElementById('askBtn');
@@ -157,6 +135,190 @@
     aiResponseBox.innerHTML = "❌ Error while contacting OpenRouter AI.";
   }
 });
+const goodIngredients = [
+  // Packed food
+  'fiber',
+  'protein',
+  'vitamin',
+  'whole grain',
+  'probiotics',
+  'iron',
+  'calcium',
+  'magnesium',
+  'zinc',
+  'omega-3',
+  'green tea extract',
+  'turmeric',
+  'ginger',
+  'olive oil',
+  'avocado oil',
+  'niacinamide',
+  'stevia',
+  'monk fruit',
+  'chia seeds',
+  'flax seeds',
+  'brown rice',
+  'oats',
+  'quinoa',
+  'natural flavor',
+  'spinach powder',
+  'beetroot powder',
+  'coconut sugar',
+  'honey',
+
+  // Gym supplements
+  'whey protein',
+  'casein',
+  'creatine monohydrate',
+  'beta-alanine',
+  'l-citrulline',
+  'l-arginine',
+  'branched-chain amino acids',
+  'bcaa',
+  'eaa',
+  'electrolytes',
+  'vitamin d',
+  'vitamin b12',
+  'glutamine',
+  'ashwagandha',
+  'rhodiola rosea',
+  'digestive enzymes',
+  'mct oil',
+  'caffeine (moderate)',
+
+  // Cosmetics (safe ingredients used in skin/hair care)
+  'hyaluronic acid',
+  'aloe vera',
+  'shea butter',
+  'coconut oil',
+  'jojoba oil',
+  'glycerin',
+  'ceramides',
+  'niacinamide',
+  'vitamin e',
+  'panthenol',
+  'green tea',
+  'licorice root extract'
+];
+const badIngredients = [
+  // Packed food
+  'high-fructose corn syrup',
+  'palm oil',
+  'aspartame',
+  'msg',
+  'sodium nitrate',
+  'sodium nitrite',
+  'trans fat',
+  'hydrogenated oil',
+  'artificial flavor',
+  'artificial color',
+  'red 40',
+  'yellow 5',
+  'blue 1',
+  'saccharin',
+  'sucralose',
+  'bht',
+  'bha',
+  'propyl gallate',
+  'tbhq',
+  'maltodextrin',
+  'monosodium glutamate',
+  'sodium benzoate',
+  'sulfite',
+  'glucose syrup',
+  'refined flour',
+  'refined sugar',
+  'dextrose',
+  'caramel color',
+  'potassium sorbate',
+  'corn syrup solids',
+
+  // Gym supplements
+  'proprietary blend',
+  'acesulfame potassium',
+  'banned stimulants',
+  '1,3-dmaa',
+  'synephrine',
+  'yohimbine (high dose)',
+  'phenylbutazone',
+  'lead',
+  'mercury',
+  'excess caffeine',
+  'silicon dioxide',
+  'titanium dioxide',
+  'magnesium stearate',
+  'polysorbate 80',
+  'propylene glycol',
+
+  // Cosmetics
+  'paraben',
+  'sodium lauryl sulfate',
+  'sls',
+  'sles',
+  'formaldehyde',
+  'phthalates',
+  'triclosan',
+  'oxybenzone',
+  'coal tar dyes',
+  'mineral oil',
+  'petrolatum',
+  'synthetic fragrance',
+  'aluminum chlorohydrate'
+];
+
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 250 };
+
+    function analyzeIngredients(text) {
+      const result = [];
+      const lower = text.toLowerCase();
+
+      badIngredients.forEach(i => {
+        if (lower.includes(i)) result.push(`❌ Harmful: ${i}`);
+      });
+
+      goodIngredients.forEach(i => {
+        if (lower.includes(i)) result.push(`✅ Useful: ${i}`);
+      });
+
+      return result.length ? result.join("\n") : "⚠️ No strong match found.";
+    }
+
+    function fetchProduct(barcode) {
+      document.getElementById("barcodeText").innerText = barcode;
+      fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 1) {
+            const product = data.product;
+            const info = `📦 Name: ${product.product_name || 'N/A'}\n🧾 Ingredients: ${product.ingredients_text || 'N/A'}\n🍽️ Brand: ${product.brands || 'N/A'}\n🥗 Nutrition Grade: ${product.nutrition_grades || 'N/A'}`;
+            document.getElementById("productInfo").innerText = info;
+            document.getElementById("ingredientInsights").innerText = analyzeIngredients(product.ingredients_text || '');
+          } else {
+            document.getElementById("productInfo").innerText = "❌ Product not found!";
+            document.getElementById("ingredientInsights").innerText = "No data to analyze.";
+          }
+        })
+        .catch(err => {
+          document.getElementById("productInfo").innerText = "⚠️ Error fetching data.";
+          document.getElementById("ingredientInsights").innerText = "";
+        });
+    }
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          barcode => {
+            html5QrCode.stop().then(() => {
+              fetchProduct(barcode);
+            });
+          }
+        ).catch(err => console.error("Camera start error:", err));
+      }
+    }).catch(err => console.error("Camera fetch error:", err));
+
   </script>
 </body>
 </html>

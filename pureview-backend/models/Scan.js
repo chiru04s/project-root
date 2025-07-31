@@ -1,11 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const ScanSchema = new mongoose.Schema({
-  userId: mongoose.Schema.Types.ObjectId,
-  type: String,
-  result: String,
-  status: String,
+const scanSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  barcode: { type: String, required: true },
+  name: { type: String, required: true },
   date: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Scan', ScanSchema);
+module.exports = mongoose.model("Scan", scanSchema);
